@@ -1,3 +1,4 @@
+// iss.js
 const needle = require('needle');
 
 const fetchMyIP = function(callback) {
@@ -14,9 +15,59 @@ const fetchMyIP = function(callback) {
       callback(Error(msg), null);
       return;
     }
+
     const ip = response.body.ip;
     callback(null, ip);
   });
+};
+
+const fetchCoordsByIP = function(ip, callback) {
+  const url = `https://ipwho.is/${ip}`;
+
+  needle.get(url, (error, response) => {
+    if (error) {
+      callback(error, null);
+      return;
+    }
+
+    if (!response.body.success) {
+      const message = `Success status was false. Server message says: ${response.body.message} when fetching IP for ${ip}`;
+      callback(Error(message), null);
+      return;
+    }
+
+
+    const { latitude, longitude } = response.body;
+    callback(null, { latitude, longitude });
+  });
 
 };
-module.exports = { fetchMyIP };
+
+const fetchISSFlyOverTimes = function(coords, callback) {
+  const url = `http://api.open-notify.org/iss-pass.json?lat=${coords.latitude}&lon=${coords.longitude}`;
+
+  needle.get(url, (error, response) => {
+    if (error) {
+      callback(error, null);
+      return;
+    }
+    if (response.statusCode !== 200) {
+      const msg = `Status Code ${response.statusCode} when fetching ISS pass times. Repsonse: ${response.body}`;
+      callback(Error(msg), null);
+      return;
+    }
+    const passes = response.body.response;
+    if (!passes) {
+      const msg = `Invalid response from ISS API: ${JSON.stringify(response.body)}`;
+      callback(Error(msg), null);
+      return;
+    }
+    callback(null, passes);
+  });
+};
+
+module.exports = {
+  fetchMyIP,
+  fetchCoordsByIP,
+  fetchISSFlyOverTimes
+};
