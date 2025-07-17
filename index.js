@@ -31,7 +31,7 @@ fetchMyIP((error, ip) => {
         const duration = pass.duration;
         console.log(`Next pass at ${datetime} for ${duration} seconds!`);
       }
-    })
+    });
   });
 });
 // use request to fetch IP address from JSON API
